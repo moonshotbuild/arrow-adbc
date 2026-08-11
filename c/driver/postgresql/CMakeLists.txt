@@ -22,21 +22,21 @@ if(WIN32)
   set(LIBPQ_STATIC_LIBRARIES PostgreSQL::PostgreSQL)
   set(LIBPQ_INCLUDE_DIRS)
 elseif(APPLE)
-  # On macOS, statically link libpq to avoid code signing issues
+  # datasetkit-fixes: link libpq DYNAMICALLY (via pkg-config) on macOS.
+  #
+  # The previous macOS branch (PR #50, "statically link libpq to avoid code
+  # signing issues") linked ONLY libpq.a, which dropped libpq's transitive
+  # dependencies -- OpenSSL, GSSAPI, etc. The driver is linked
+  # -undefined dynamic_lookup, so those symbols bound to NULL at load and the
+  # driver segfaulted on the first SSL/GSS call during connect
+  # (dbt-labs/dbt-core#13123 / #14594). The dynamic libpq.dylib carries its own
+  # dependency load commands, so every symbol resolves at load. This reintroduces
+  # the code-signing concern #50 was avoiding, which is acceptable for a
+  # locally-built development driver.
   find_package(PkgConfig)
-  # Explicitly look for static libpq
   pkg_check_modules(LIBPQ REQUIRED IMPORTED_TARGET libpq)
-  # Find the static library
-  find_library(LIBPQ_STATIC_LIB 
-               NAMES libpq.a 
-               PATHS ${LIBPQ_LIBRARY_DIRS} /opt/homebrew/opt/libpq/lib /usr/local/opt/libpq/lib
-               NO_DEFAULT_PATH)
-  if(NOT LIBPQ_STATIC_LIB)
-    message(FATAL_ERROR "Could not find static libpq library. Please ensure libpq is installed with Homebrew.")
-  endif()
-  set(LIBPQ_LINK_LIBRARIES ${LIBPQ_STATIC_LIB})
-  set(LIBPQ_STATIC_LIBRARIES ${LIBPQ_STATIC_LIB})
-  set(LIBPQ_INCLUDE_DIRS ${LIBPQ_INCLUDE_DIRS})
+  set(LIBPQ_LINK_LIBRARIES PkgConfig::LIBPQ)
+  set(LIBPQ_STATIC_LIBRARIES PkgConfig::LIBPQ)
 else()
   find_package(PkgConfig)
   pkg_check_modules(LIBPQ REQUIRED libpq)
