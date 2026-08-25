@@ -44,7 +44,7 @@ require (
 	golang.org/x/tools v0.44.0
 	google.golang.org/api v0.253.0
 	google.golang.org/grpc v1.79.3
-	google.golang.org/protobuf v1.36.10
+	google.golang.org/protobuf v1.36.12
 	gopkg.in/dnaeon/go-vcr.v4 v4.0.6
 	modernc.org/sqlite v1.39.1
 	resty.dev/v3 v3.0.0-beta.6
